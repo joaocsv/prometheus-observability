@@ -7,6 +7,8 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - observability
 
   grafana:
     image: grafana/grafana
@@ -14,6 +16,8 @@ services:
       - 3000:3000
     depends_on:
       - prometheus
+    networks:
+      - observability
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -27,9 +31,27 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
     depends_on:
       - redis
+    networks:
+      - observability
   
   redis:
     image: redis:latest
     container_name: redis
     ports:
-    - 6379:6379
+      - 6379:6379
+    networks:
+      - observability
+
+  app:
+    build: .
+    container_name: app
+    volumes:
+      - .:/go/src
+    ports:
+      - 8181:8181
+    networks:
+      - observability
+
+networks:
+  observability:
+    external: true
